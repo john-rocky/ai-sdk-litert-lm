@@ -1,7 +1,7 @@
 import { type ModelMessage, streamText } from 'ai'
 import { litertlm } from 'ai-sdk-litert-lm'
 import { StatusBar } from 'expo-status-bar'
-import { useEffect, useRef, useState } from 'react'
+import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import {
   Linking,
   Pressable,
@@ -25,7 +25,7 @@ export default function App() {
   const [lines, setLines] = useState<Line[]>([])
   const [busy, setBusy] = useState(false)
   const [checkLog, setCheckLog] = useState<string[]>([])
-  const chat = useRef<ScrollView>(null)
+  const chat = useRef<ComponentRef<typeof ScrollView>>(null)
   const messages = useRef<ModelMessage[]>([])
   const abort = useRef<AbortController | null>(null)
   const checksRunning = useRef(false)
