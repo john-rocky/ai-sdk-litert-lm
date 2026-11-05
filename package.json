@@ -1,0 +1,100 @@
+{
+  "name": "ai-sdk-litert-lm",
+  "version": "0.1.0",
+  "description": "LiteRT-LM provider for the Vercel AI SDK: run .litertlm models on iOS, Android and in the browser with generateText and streamText.",
+  "keywords": [
+    "ai",
+    "ai-sdk",
+    "vercel-ai-sdk",
+    "provider",
+    "litert",
+    "litert-lm",
+    "litertlm",
+    "gemma",
+    "on-device",
+    "react-native",
+    "expo",
+    "webgpu"
+  ],
+  "license": "MIT",
+  "author": "Daisuke Majima",
+  "homepage": "https://github.com/john-rocky/ai-sdk-litert-lm#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/john-rocky/ai-sdk-litert-lm.git"
+  },
+  "bugs": {
+    "url": "https://github.com/john-rocky/ai-sdk-litert-lm/issues"
+  },
+  "type": "module",
+  "main": "./dist/web/index.js",
+  "module": "./dist/web/index.js",
+  "react-native": "./dist/native/index.js",
+  "browser": "./dist/web/index.js",
+  "types": "./dist/web/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/web/index.d.ts",
+      "react-native": "./dist/native/index.js",
+      "browser": "./dist/web/index.js",
+      "default": "./dist/web/index.js"
+    },
+    "./native": {
+      "types": "./dist/native/index.d.ts",
+      "default": "./dist/native/index.js"
+    },
+    "./web": {
+      "types": "./dist/web/index.d.ts",
+      "default": "./dist/web/index.js"
+    },
+    "./package.json": "./package.json",
+    "./internal/native": {
+      "types": "./dist/native/runtime.d.ts",
+      "default": "./dist/native/runtime.js"
+    },
+    "./internal/web": {
+      "types": "./dist/web/runtime.d.ts",
+      "default": "./dist/web/runtime.js"
+    },
+    "./internal/provider": {
+      "types": "./dist/shared/provider.d.ts",
+      "default": "./dist/shared/provider.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@ai-sdk/provider": "^4.0.33"
+  },
+  "peerDependencies": {
+    "@litert-lm/core": ">=0.19.0",
+    "react-native-litert-lm": ">=0.8.2"
+  },
+  "peerDependenciesMeta": {
+    "@litert-lm/core": {
+      "optional": true
+    },
+    "react-native-litert-lm": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@litert-lm/core": "0.19.0",
+    "ai": "^7.0.163",
+    "react-native-litert-lm": "0.8.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.0",
+    "zod": "^4.1.8"
+  }
+}
