@@ -20,7 +20,7 @@ const model = litertlm(MODEL_ID)
 type Line = { role: 'user' | 'assistant'; text: string }
 
 export default function App() {
-  const [status, setStatus] = useState('Send a message to download the model (about 2 GB).')
+  const [status, setStatus] = useState('Send a message to download the model (2 to 3 GB).')
   const [input, setInput] = useState('What can you do without a network connection?')
   const [lines, setLines] = useState<Line[]>([])
   const [busy, setBusy] = useState(false)
