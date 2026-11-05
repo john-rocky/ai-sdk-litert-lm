@@ -25,6 +25,7 @@ export default function App() {
   const [lines, setLines] = useState<Line[]>([])
   const [busy, setBusy] = useState(false)
   const [checkLog, setCheckLog] = useState<string[]>([])
+  const chat = useRef<ScrollView>(null)
   const messages = useRef<ModelMessage[]>([])
   const abort = useRef<AbortController | null>(null)
   const checksRunning = useRef(false)
@@ -98,7 +99,12 @@ export default function App() {
       <Text style={styles.title}>LiteRT-LM with the AI SDK</Text>
       <Text style={styles.status}>{status}</Text>
 
-      <ScrollView style={styles.chat} contentContainerStyle={styles.chatContent}>
+      <ScrollView
+        ref={chat}
+        style={styles.chat}
+        contentContainerStyle={styles.chatContent}
+        onContentSizeChange={() => chat.current?.scrollToEnd({ animated: false })}
+      >
         {lines.map((line, index) => (
           <Text
             key={index}
