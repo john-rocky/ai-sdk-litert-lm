@@ -12,4 +12,6 @@ The speed moved between runs on the same device. On the Pixel 11 Pro the first r
 
 A reply of 1024 tokens took 89 s on the Pixel 11 Pro and 11 s on the iPhone 18 Pro. That check runs on phones only.
 
+Chrome ran headless, from Playwright, with a profile on disk, `--enable-unsafe-webgpu` and `--ignore-gpu-blocklist`. The example's chat also ran there with no flags (`chat-web-noflags.log`).
+
 The logs are kept by the author, not in this repo. What wasn't run on a device is listed at the end of the README's "What was checked".

@@ -265,7 +265,8 @@ About those runs:
 
 - The runs came from a clean clone, with the steps above. `npx expo run:ios` wasn't run: the iPhone app was built from the same project with `xcodebuild` and signed with an App ID that already existed.
 - Speed, for a reply of two sentences: 94 tokens per second on the iPhone 18 Pro, 27 on the Pixel 11 Pro, 36 in Chrome. On Android the provider works the figure out from the pieces of text the engine streamed. The Pixel's next run, three minutes later, gave 14, with its skin sensor at 40 °C instead of 37 °C. A reply of 1024 tokens took 11 s on the iPhone and 89 s on the Pixel. More in [`docs/tested-devices.md`](docs/tested-devices.md).
-- The example's chat was also used in Chrome, in a window the size of a phone: a message, two follow-ups, Stop during a reply, and a message after Stop.
+- The example's chat was also used on the Pixel 11 Pro, typing on its keyboard, and in Chrome, in a window the size of a phone: a message, a follow-up, Stop during a reply, and a message after Stop.
+- Chrome ran headless, from Playwright, with a profile on disk. The checks ran with `--enable-unsafe-webgpu` and `--ignore-gpu-blocklist`, and the chat ran with no flags.
 - In Chrome the engine logs `Model expects minimum LiteRT-LM runtime version 0.19.1, but current runtime version is 0.19.0` for this file. Every check passed with it.
 - The tool call that doesn't parse is injected, because a model can't be made to write one on demand. The other failures are real.
 - With no network: the Pixel 11 Pro had no network at all, and Chrome had the Hub blocked. Both passed 27 of 27, with the checks that need the Hub left out. An iPhone can't be put in airplane mode from a script, so there the app's own requests to the Hub were made to fail.
