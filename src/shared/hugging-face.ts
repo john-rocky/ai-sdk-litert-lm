@@ -53,13 +53,15 @@ function repoBaseName(repo: string): string {
  * Choose the `.litertlm` file a phone should load from a repo. A repo can hold a GPU-only
  * bundle next to a full one, and which of them comes first differs by platform:
  *
- * - iOS: the GPU file. On an iPhone 18 Pro the full bundle declined a long prompt on the GPU.
+ * - iOS: the GPU file. On an iPhone 18 Pro the full bundle with its drafter declined a long
+ *   prompt on the GPU.
  * - Android: the full bundle. With LiteRT-LM 0.18.1 the GPU file gave wrong text, and no
  *   error, on a Pixel 11 Pro (PowerVR). The full bundle answered on every phone tried, and
  *   it can fall back to the CPU.
  *
- * Among those, the order is the one `@litert-lm/core` uses in the browser: the file named
- * after the repo, then `model`, then the smallest quantization, then the shortest name.
+ * Among those, the order follows `@litert-lm/core` in the browser, without its first step (a
+ * file with a GPU-only twin): the file named after the repo, then `model`, then the smallest
+ * quantization, then the shortest name.
  */
 export function selectRepoFile(
   files: RepoFile[],
