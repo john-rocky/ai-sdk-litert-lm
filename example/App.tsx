@@ -31,6 +31,10 @@ export default function App() {
   const abort = useRef<AbortController | null>(null)
   const checksRunning = useRef(false)
 
+  // On the next frame, and again when the keyboard resizes the chat. On a Pixel, scrolling at once
+  // left a one-word reply below the screen.
+  const toEnd = () => requestAnimationFrame(() => chat.current?.scrollToEnd({ animated: false }))
+
   const startChecks = (options: Parameters<typeof runChecks>[0]) => {
     // A cold start can deliver its link twice: as the initial URL and as an event.
     if (checksRunning.current) return
@@ -104,7 +108,8 @@ export default function App() {
         ref={chat}
         style={styles.chat}
         contentContainerStyle={styles.chatContent}
-        onContentSizeChange={() => chat.current?.scrollToEnd({ animated: false })}
+        onContentSizeChange={toEnd}
+        onLayout={toEnd}
       >
         {lines
           .filter((line) => line.text.length > 0)
