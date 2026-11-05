@@ -3,6 +3,7 @@ import { litertlm } from 'ai-sdk-litert-lm'
 import { StatusBar } from 'expo-status-bar'
 import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import {
+  KeyboardAvoidingView,
   Linking,
   Pressable,
   ScrollView,
@@ -94,7 +95,7 @@ export default function App() {
   }
 
   return (
-    <View style={styles.screen}>
+    <KeyboardAvoidingView style={styles.screen} behavior="padding">
       <StatusBar style="dark" />
       <Text style={styles.title}>LiteRT-LM with the AI SDK</Text>
       <Text style={styles.status}>{status}</Text>
@@ -105,14 +106,16 @@ export default function App() {
         contentContainerStyle={styles.chatContent}
         onContentSizeChange={() => chat.current?.scrollToEnd({ animated: false })}
       >
-        {lines.map((line, index) => (
-          <Text
-            key={index}
-            style={line.role === 'user' ? styles.user : styles.assistant}
-          >
-            {line.text}
-          </Text>
-        ))}
+        {lines
+          .filter((line) => line.text.length > 0)
+          .map((line, index) => (
+            <Text
+              key={index}
+              style={line.role === 'user' ? styles.user : styles.assistant}
+            >
+              {line.text}
+            </Text>
+          ))}
         {checkLog.map((line, index) => (
           <Text key={`check-${index}`} style={styles.check}>
             {line}
@@ -138,12 +141,12 @@ export default function App() {
           <Text style={styles.buttonText}>Run checks</Text>
         </Pressable>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, paddingTop: 56, paddingHorizontal: 16, paddingBottom: 24, backgroundColor: '#fff' },
+  screen: { flex: 1, paddingTop: 56, paddingHorizontal: 16, backgroundColor: '#fff' },
   title: { fontSize: 20, fontWeight: '600' },
   status: { color: '#555', marginTop: 4, marginBottom: 8 },
   chat: { flex: 1 },
@@ -152,7 +155,7 @@ const styles = StyleSheet.create({
   assistant: { alignSelf: 'flex-start', backgroundColor: '#f2f2f2', padding: 8, borderRadius: 8 },
   check: { fontFamily: 'monospace', fontSize: 11 },
   input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, minHeight: 44 },
-  row: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  row: { flexDirection: 'row', gap: 8, marginTop: 8, marginBottom: 24 },
   button: { backgroundColor: '#1a73e8', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8 },
   buttonText: { color: '#fff', fontWeight: '600' },
 })
