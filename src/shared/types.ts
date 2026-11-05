@@ -30,7 +30,10 @@ export interface LiteRTLMModelSettings {
   speculativeDecoding?: boolean
   /** Hugging Face token of the user loading a gated or private model. */
   accessToken?: string
-  /** Phones only: the file's SHA-256 as lowercase hex, checked after the download. */
+  /**
+   * The file's SHA-256 as lowercase hex. A phone checks the download against it. A browser
+   * doesn't hash the file: for a Hugging Face id it only compares this with the Hub's listing.
+   */
   sha256?: string
   /** Called while the model downloads, when it loads on the first call instead of through `prepare()`. */
   onProgress?: (progress: LiteRTLMProgress) => void

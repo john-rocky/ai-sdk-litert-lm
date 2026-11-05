@@ -1,0 +1,25 @@
+# ai-sdk-litert-lm
+
+> A Vercel AI SDK provider for LiteRT-LM: run `.litertlm` models with `generateText` and `streamText` on iOS, on Android and in the browser, with the same line of code. On phones it runs on `react-native-litert-lm`, in a browser on `@litert-lm/core` with WebGPU.
+
+```ts
+import { streamText } from 'ai'
+import { litertlm } from 'ai-sdk-litert-lm'
+
+const result = streamText({
+  model: litertlm('hf://litert-community/gemma-4-E2B-it-litert-lm'),
+  prompt: 'What can you do without a network connection?',
+})
+
+for await (const text of result.textStream) console.log(text)
+```
+
+## Start here
+
+- [README](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/README.md): install, choosing a model, tools, structured output, what changes per call, errors.
+- [AGENTS.md](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/AGENTS.md): for coding agents. Task → API → file.
+- [docs/tested-devices.md](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/docs/tested-devices.md): device × runtime × result.
+- [example/App.tsx](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/example/App.tsx): a small chat for iOS, Android and web in one Expo app.
+- [example/polyfills.js](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/example/polyfills.js): the web APIs the AI SDK needs in React Native.
+- [example/src/checks.ts](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/example/src/checks.ts): every path run against the real engine, failures included.
+- [src/shared/types.ts](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/src/shared/types.ts): the model settings and what each call reports.

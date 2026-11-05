@@ -1,6 +1,6 @@
 # ai-sdk-litert-lm
 
-[LiteRT-LM](https://ai.google.dev/edge/litert-lm) provider for the [Vercel AI SDK](https://ai-sdk.dev). Run `.litertlm` models with `generateText` and `streamText` on iOS, on Android and in the browser, with the same line of code:
+[LiteRT-LM](https://ai.google.dev/edge/litert-lm) provider for the [Vercel AI SDK](https://ai-sdk.dev). Run `.litertlm` models with `generateText` and `streamText` on iOS, on Android and in the browser, with the same line of code. Gemma 4 E2B streamed a short answer at 94 tokens per second on an iPhone 18 Pro (2026-11-05) and 27 on a Pixel 11 Pro (2026-11-06).
 
 ```ts
 import { streamText } from 'ai'
@@ -61,7 +61,7 @@ npx expo run:ios --configuration Release --device
 
 ### Bare React Native
 
-Install `ai-sdk-litert-lm`, `ai`, `react-native-litert-lm` and `react-native-nitro-modules`, then follow the [polyfill guide](https://www.react-native-ai.dev/docs/polyfills) for bare apps, which also adds web streams. Bare React Native has no web target.
+Install `ai-sdk-litert-lm`, `ai`, `react-native-litert-lm` and `react-native-nitro-modules`, then follow the [polyfill guide](https://www.react-native-ai.dev/docs/polyfills) for bare apps, which also adds web streams. For a web build, use the Browser only install below.
 
 ### Browser only
 
@@ -86,7 +86,9 @@ Some repos hold a GPU-only `-gpu.litertlm` file next to a full bundle. Given a r
 | iOS | The `-gpu.litertlm` file |
 | Android | The full bundle |
 
-A phone uses the repo's `litertlm_manifest.json` instead if it has one. Files built for one chip are never chosen, and `backend: 'cpu'` skips the GPU-only file, which can't run on a CPU. When several files are left, the order is the one `@litert-lm/core` uses: the file named after the repo, then `model`, then INT4, then the shortest name. To load another one, name it in the model id.
+For a `litert-community` repo, `@litert-lm/core` looks on the repo's `web` branch before `main`, so a browser can get a different file of the same name than a phone does. A phone reads `main` unless the model id names a revision.
+
+A phone uses the repo's `litertlm_manifest.json` instead if it has one. Files built for one chip are never chosen, and `backend: 'cpu'` skips the GPU-only file, which can't run on a CPU. When several files are left, the order is: the file named after the repo, then `model`, then INT4, then the shortest name. To load another one, name it in the model id.
 
 Android gets the full bundle because the GPU-only Gemma 4 E2B file gave wrong text, with no error, on a Pixel 11 Pro with `react-native-litert-lm` 0.8.2 (LiteRT-LM 0.18.1). If you've tested your phones and want the smaller file, name it: `hf://litert-community/gemma-4-E2B-it-litert-lm/gemma-4-E2B-it-gpu.litertlm`.
 
@@ -102,22 +104,22 @@ The first call downloads and loads the model. To do that on your own schedule an
 const model = litertlm('hf://litert-community/gemma-4-E2B-it-litert-lm')
 
 await model.prepare({
-  onProgress: ({ fraction }) => setProgress(fraction),
+  onProgress: ({ fraction }) => setProgress(fraction ?? 0),
 })
 ```
 
 `model.unload()` frees the memory, and the next call loads the model again. One provider keeps one model in memory, so loading a second model unloads the first. Calls run one at a time, in order.
 
-Downloads are kept. A phone keeps them in the app's own storage. A browser keeps them in the [origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system), which exists only on HTTPS and localhost. Without it, or without room in it, the model downloads on every load: an off-the-record Chrome context ran out at about 2 GB. To free the space in a browser:
+Downloads are kept. A phone keeps them in the app's own storage. A browser keeps them in the [origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system), which exists only on HTTPS and localhost. Without it, or without room in it, the model downloads on every load: a Chrome context with no profile on disk ran out at about 2 GB. A browser can also clear this storage when the disk runs low, unless the page has called [`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist) and been granted it. To free the space in a browser:
 
 ```ts
 const root = await navigator.storage.getDirectory()
 await root.removeEntry('litert-lm-models', { recursive: true })
 ```
 
-A dropped connection doesn't lose the download. A browser picks up where it stopped. On a phone the call fails with `DOWNLOAD_FAILED`, and `react-native-litert-lm` goes on from there on the next call.
+A dropped connection doesn't lose the download if the server takes range requests, as the Hub does. A browser picks up where it stopped. On a phone the call fails with `DOWNLOAD_FAILED`, and `react-native-litert-lm` goes on from there on the next call.
 
-A downloaded model loads with no network. When the Hub doesn't answer, a browser uses the file from the last time. A phone keeps files by name, not by repo, so it takes a file named after the repo, followed by nothing or by how the file was built (`-gpu`, `_mixed_int4`). Any other name may be another model, and the call fails with `DOWNLOAD_FAILED`. For those, name the file in the model id.
+A downloaded model loads with no network. When the Hub doesn't answer, a browser uses the file from the last time. A phone keeps files by name, not by repo, so it looks for a file whose name is the repo's name, alone or with a build suffix such as `-gpu` or `_mixed_int4`. Any other name may be another model, and the call fails with `DOWNLOAD_FAILED`. For those, name the file in the model id.
 
 A phone keeps one file per name. With a Hugging Face id the provider passes the file's hash, so another revision or another repo's file of that name replaces it. With a plain URL, pass `sha256` to get the same.
 
@@ -145,7 +147,7 @@ A tool call that doesn't parse, or that fails its schema, arrives as a `tool-err
 
 ## Structured output
 
-`Output.object` works on both. On a phone the engine constrains the output to the schema. A model held to a schema can't call a tool, so a call that also has tools sends the schema as an instruction instead, and so does `Output.json()`, which has no schema to hold it to. In a browser the runtime has no such constraint, so it's always an instruction. An instruction comes with a warning on the call, and a reply that doesn't match fails the way it does with any provider.
+`Output.object` works on both. On a phone the engine constrains the output to the schema. A model held to a schema can't call a tool. So a call that also has tools sends the schema to the model as an instruction instead. `Output.json()` has no schema, so it's an instruction too. In a browser the runtime has no such constraint, so it's always an instruction. An instruction comes with a warning on the call, and a reply that doesn't match fails the way it does with any provider.
 
 ## Reasoning
 
@@ -193,7 +195,7 @@ const model = litertlm('hf://litert-community/gemma-4-E2B-it-litert-lm', {
 })
 ```
 
-`speculativeDecoding: true` turns on a bundle's multi-token drafter, which speeds up generation on the phones it runs on. The browser ignores it with a warning. `sha256` is checked on phones only.
+`speculativeDecoding: true` turns on a bundle's multi-token drafter, which can make decoding faster. The browser ignores it with a warning. A phone hashes the download and checks it against `sha256`. A browser doesn't hash the file: for a Hugging Face id it only compares `sha256` with the Hub's listing.
 
 Images and audio in the prompt aren't supported yet: a file part fails with a clear error.
 
@@ -226,13 +228,13 @@ try {
 | `CONTEXT_TOO_LONG` | The prompt is longer than the conversation can hold |
 | `GENERATION_FAILED` | Generation failed for another reason |
 
-`streamText` reports these through `onError` and the stream's `error` part, like any other provider. An aborted call stops the engine, and the model is ready for the next one. A phone's runtime can't cancel a download: the call rejects at once, the download goes on, and the next call picks it up.
+`streamText` reports these through `onError` and the stream's `error` part, like any other provider. An aborted call stops generation, and the model stays loaded for the next one. A phone's runtime can't cancel a download: the call rejects at once, the download goes on, and the next call picks it up.
 
 If Android asks for memory back, the engine is freed. A call in progress ends with `OUT_OF_MEMORY`, and the next call loads the model again.
 
 ## Try the example
 
-[`example/`](example) is one Expo app for all three targets: a small chat, and a button that runs every path in this README, failures included, against the real engine.
+[`example/`](example) is one Expo app for all three targets: a small chat, and a button that runs the checks below, failures included, against the real engine. A truncated file and a dropped connection need a file and a server of your own, so the button leaves those out.
 
 ```bash
 git clone https://github.com/john-rocky/ai-sdk-litert-lm
@@ -247,27 +249,31 @@ npx expo run:android --variant release   # Android
 npx expo run:ios --configuration Release --device   # iOS
 ```
 
-For iOS, first change `ios.bundleIdentifier` in `example/app.json` to an id your team can sign. The button writes its results to the screen and, on a phone, to `Documents/checks.log` in the app's container.
+For iOS, first change `ios.bundleIdentifier` in `example/app.json` to an id your team can sign. `npx expo run:android` keeps running after the app opens, to show the app's logs. The button writes its results to the screen and, on a phone, to `Documents/checks.log` in the app's container.
 
 ## What was checked
 
-[`example/src/checks.ts`](example/src/checks.ts) runs against the real engine: `generateText`, `streamText`, tools, structured output, reasoning, a conversation with and without a replay, a reply cut off at its limit, and the failures (no such file or repo, a broken or truncated file, an abort during a load and during a call, a tool call that doesn't parse, tool arguments that fail the schema, a prompt that's too long). The last run, on 2026-11-05, from a clean install with `hf://litert-community/gemma-4-E2B-it-litert-lm`:
+[`example/src/checks.ts`](example/src/checks.ts) runs against the real engine: `generateText`, `streamText`, tools, structured output, reasoning, a conversation with and without a replay, a reply cut off at its limit, and the failures (no such file or repo, a broken or truncated file, an abort during a load and during a call, a tool call that doesn't parse, tool arguments that fail the schema, a prompt that's too long). The last runs, from a clean install with `hf://litert-community/gemma-4-E2B-it-litert-lm`:
 
-| Where | Runtime | File chosen | Passed |
-| --- | --- | --- | --- |
-| Pixel 11 Pro, Android 17 | `react-native-litert-lm` 0.8.2 (LiteRT-LM 0.18.1) | `gemma-4-E2B-it.litertlm` | 30 of 30 |
-| iPhone 18 Pro, iOS 27.2 | `react-native-litert-lm` 0.8.2 (LiteRT-LM 0.18.1) | `gemma-4-E2B-it-gpu.litertlm` | 30 of 30 |
-| Chrome 156 on a Mac, WebGPU | `@litert-lm/core` 0.19.0 | `gemma-4-E2B-it-gpu.litertlm` | 31 of 31 |
+| Date | Where | Runtime | File chosen | Passed |
+| --- | --- | --- | --- | --- |
+| 2026-11-06 | Pixel 11 Pro, Android 17 | `react-native-litert-lm` 0.8.2 (LiteRT-LM 0.18.1) | `gemma-4-E2B-it.litertlm` | 30 of 30 |
+| 2026-11-05 | iPhone 18 Pro, iOS 27.2 | `react-native-litert-lm` 0.8.2 (LiteRT-LM 0.18.1) | `gemma-4-E2B-it-gpu.litertlm` | 30 of 30 |
+| 2026-11-05 | Chrome 156 on a Mac, WebGPU | `@litert-lm/core` 0.19.0 | `gemma-4-E2B-it-gpu.litertlm`, `web` branch | 31 of 31 |
 
 About those runs:
 
+- The runs came from a clean clone, with the steps above. `npx expo run:ios` wasn't run: the iPhone app was built from the same project with `xcodebuild` and signed with an App ID that already existed.
+- Speed, for a reply of two sentences: 94 tokens per second on the iPhone 18 Pro, 27 on the Pixel 11 Pro, 36 in Chrome. On Android the provider works the figure out from the pieces of text the engine streamed. The Pixel's next run, three minutes later, gave 14, with its skin sensor at 40 °C instead of 37 °C. A reply of 1024 tokens took 11 s on the iPhone and 89 s on the Pixel. More in [`docs/tested-devices.md`](docs/tested-devices.md).
+- The example's chat was also used in Chrome, in a window the size of a phone: a message, two follow-ups, Stop during a reply, and a message after Stop.
+- In Chrome the engine logs `Model expects minimum LiteRT-LM runtime version 0.19.1, but current runtime version is 0.19.0` for this file. Every check passed with it.
 - The tool call that doesn't parse is injected, because a model can't be made to write one on demand. The other failures are real.
-- With no network: the Pixel 11 Pro had no route to anything, and Chrome had the Hub blocked. Both passed 27 of 27, with the checks that need the Hub left out. An iPhone can't be put in airplane mode from a script, so there the app's own requests to the Hub were made to fail.
-- A dropped connection: a local server cut Chrome's download at 300 MB, with and without ranges on the next request, and the model answered both times. The Pixel 11 Pro lost its network during a download, the call failed with `DOWNLOAD_FAILED`, and the next run finished the load.
+- With no network: the Pixel 11 Pro had no network at all, and Chrome had the Hub blocked. Both passed 27 of 27, with the checks that need the Hub left out. An iPhone can't be put in airplane mode from a script, so there the app's own requests to the Hub were made to fail.
+- A dropped connection: a local server cut Chrome's download at 300 MB, once letting it continue from there and once making it start over, and the model answered both times. The Pixel 11 Pro lost its network during a download, the call failed with `DOWNLOAD_FAILED`, and the next run finished the load.
 - With `litert-community/Qwen3-0.6B` on the Pixel 11 Pro, 24 of 28 passed. The misses were three wrong answers from a small model and a call that answered without using the tool.
 - A plain Vite app in Chrome passed the "Browser only" install, with `wasmPath` set and a second model on the provider.
 
-Not run on a device: `backend: 'npu'`, `speculativeDecoding`, a repo with a `litertlm_manifest.json`, a gated model's `accessToken`, a bare React Native app, and Android asking for memory back.
+Not run on a device: `backend: 'npu'`, `speculativeDecoding`, a repo with a `litertlm_manifest.json`, a gated model's `accessToken`, a bare React Native app, Android asking for memory back, and the example's chat on an iPhone.
 
 ## Development
 
@@ -279,4 +285,4 @@ npm run typecheck
 
 ## License
 
-MIT
+MIT. Independent project, not affiliated with Google or Vercel.
