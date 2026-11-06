@@ -273,6 +273,7 @@ About those runs:
 - A dropped connection: a local server cut Chrome's download at 300 MB, once letting it continue from there and once making it start over, and the model answered both times. The Pixel 11 Pro lost its network during a download, the call failed with `DOWNLOAD_FAILED`, and the next run finished the load.
 - With `litert-community/Qwen3-0.6B` on the Pixel 11 Pro, 24 of 28 passed. The misses were three wrong answers from a small model and a call that answered without using the tool.
 - A plain Vite app in Chrome passed the "Browser only" install, with `wasmPath` set and a second model on the provider.
+- The package as published, 0.1.0 from npm, on 2026-11-06: the example with its dependency switched to it passed 30 of 30 on the Pixel 11 Pro, and 27 of 27 with no network. A new Expo app set up with the install lines above ran the README's first block, `prepare()`, `generateText`, `streamText` and tools, and passed on the Pixel 11 Pro and in Chrome with no flags. More in [`docs/tested-devices.md`](docs/tested-devices.md).
 
 Not run on a device: `backend: 'npu'`, `speculativeDecoding`, a repo with a `litertlm_manifest.json`, a gated model's `accessToken`, a bare React Native app, Android asking for memory back, and the example's chat on an iPhone.
 

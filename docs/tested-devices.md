@@ -14,4 +14,13 @@ A reply of 1024 tokens took 89 s on the Pixel 11 Pro and 11 s on the iPhone 18 P
 
 Chrome ran headless, from Playwright, with a profile on disk, `--enable-unsafe-webgpu` and `--ignore-gpu-blocklist`. The example's chat also ran there with no flags (`chat-web-noflags.log`).
 
+## The package from npm
+
+`ai-sdk-litert-lm` 0.1.0, as published on npm, on 2026-11-06:
+
+- The example, with its dependency switched from the local pack to 0.1.0 from npm, passed 30 of 30 on the Pixel 11 Pro from a clean install, and 27 of 27 with no network (`android-p11p-28-registry.log`, `android-p11p-29-registry-offline.log`).
+- A new Expo app, made with `create-expo-app` (Expo 58, React Native 0.88.1) and set up with the README's install lines, ran the README's first block, `prepare()`, `generateText`, `streamText` and tools. All five passed on the Pixel 11 Pro (`fresh-android.log`) and in Chrome 156 as the app's web build (`fresh-web-reg.log`).
+- A plain Vite page with the README's "Browser only" install ran the README's first block and `generateText` in Chrome 156. Both passed (`fresh-vite.log`).
+- Chrome ran headless, with a profile on disk and no flags.
+
 The logs are kept by the author, not in this repo. What wasn't run on a device is listed at the end of the README's "What was checked".
