@@ -29,5 +29,6 @@ Read this if someone asked you to "run a model on the device with the AI SDK", "
 - Keep the React Native version `npx expo install` picks. An iOS build with another version can crash on launch.
 - In a React Native app, copy `example/polyfills.js` into the app and `import './polyfills'` first. The AI SDK needs web APIs React Native doesn't have.
 - Given a repo, Android loads the full bundle, and iOS and browsers load the `-gpu.litertlm` file. The GPU-only Gemma 4 E2B file gave wrong text, with no error, on a Pixel 11 Pro. Don't name that file on Android without testing the phones you care about.
+- A file on the Hub's `main` can change under the same name. A phone with an engine older than LiteRT-LM 0.19.1 reads `gemma-4-E2B-it-gpu.litertlm` from revision `3d48132a`, because the copy on `main` needs 0.19.1. For an app that ships, name a revision in the model id.
 - Images and audio in the prompt aren't supported yet. A file part fails with a clear error.
 - Numbers in the README and in `docs/tested-devices.md` carry a device and a date. Don't repeat them for another device.
