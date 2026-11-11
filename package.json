@@ -67,6 +67,7 @@
     "README.md",
     "AGENTS.md",
     "llms.txt",
+    "docs",
     "LICENSE"
   ],
   "sideEffects": false,

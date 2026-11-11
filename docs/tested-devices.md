@@ -37,4 +37,4 @@ On 2026-11-11 `gemma-4-E2B-it-gpu.litertlm` on the Hub's `main` became a file th
 
 The check that failed on the Pixel 11 Pro was `failure: generateText aborted, then the model still works`. The call, aborted after 300 ms, ran to the end. It failed in both runs that day, while the phone streamed at 3.8 tok/s against 27.2 tok/s on 2026-11-06. It passed on the iPhone 18 Pro the same day and on the Pixel 11 Pro on 2026-11-06. 0.1.1 doesn't change that code.
 
-The logs are kept by the author, not in this repo. What wasn't run on a device is listed at the end of the README's "What was checked".
+The logs are kept by the author, not in this repo. What wasn't run on a device is listed at the end of [What was checked](what-was-checked.md).

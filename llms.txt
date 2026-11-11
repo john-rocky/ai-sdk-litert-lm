@@ -16,7 +16,10 @@ for await (const text of result.textStream) console.log(text)
 
 ## Start here
 
-- [README](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/README.md): install, choosing a model, tools, structured output, what changes per call, errors.
+- [README](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/README.md): install and the example.
+- [Choose a model](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/docs/choose-a-model.md).
+- [Use it](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/docs/usage.md): tools, structured output, what changes per call, errors.
+- [What was checked](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/docs/what-was-checked.md).
 - [AGENTS.md](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/AGENTS.md): for coding agents. Task → API → file.
 - [docs/tested-devices.md](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/docs/tested-devices.md): device × runtime × result.
 - [example/App.tsx](https://raw.githubusercontent.com/john-rocky/ai-sdk-litert-lm/main/example/App.tsx): a small chat for iOS, Android and web in one Expo app.

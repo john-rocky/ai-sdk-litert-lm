@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 188" width="860" height="188" role="img" aria-labelledby="t d" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title id="t">Gemma 4 E2B through this provider</title>
+<desc id="d">Gemma 4 E2B through this provider. Tokens per second for a reply of two sentences: iPhone 2026-11-05; Pixel 2026-11-06, first run (next run: 14). iPhone 18 Pro: 94 tokens per second. Pixel 11 Pro: 27 tokens per second.</desc>
+<text x="0" y="28" font-size="20" font-weight="600" fill="#f0efec">Gemma 4 E2B through this provider</text>
+<text x="0" y="52" font-size="14" font-weight="400" fill="#c3c2b7">Tokens per second for a reply of two sentences: iPhone 2026-11-05; Pixel 2026-11-06, first run (next run: 14).</text>
+<text x="0" y="88" font-size="15" font-weight="400" fill="#f0efec">iPhone 18 Pro</text>
+<rect x="0" y="96" width="770" height="22" rx="4" fill="#3987e5"/>
+<text x="778" y="112" font-size="15" font-weight="600" fill="#f0efec">94 tok/s</text>
+<text x="0" y="150" font-size="15" font-weight="400" fill="#f0efec">Pixel 11 Pro</text>
+<rect x="0" y="158" width="221.17" height="22" rx="4" fill="#3987e5"/>
+<text x="229.17" y="174" font-size="15" font-weight="600" fill="#f0efec">27 tok/s</text>
+</svg>
