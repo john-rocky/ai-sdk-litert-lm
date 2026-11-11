@@ -29,6 +29,6 @@ Read this if someone asked you to "run a model on the device with the AI SDK", "
 - Keep the React Native version your Expo release expects. With 0.88.0 instead of Expo's 0.88.1, an iOS build crashed on launch.
 - In a React Native app, copy `example/polyfills.js` into the app and `import './polyfills'` first. The AI SDK needs web APIs React Native doesn't have.
 - Given a repo, Android loads the full bundle, and iOS and browsers load the `-gpu.litertlm` file. The GPU-only Gemma 4 E2B file gave wrong text, with no error, on a Pixel 11 Pro. Don't name that file on Android without testing the phones you care about.
-- A file on the Hub's `main` can change under the same name. A phone with an engine older than LiteRT-LM 0.19.1 reads `gemma-4-E2B-it-gpu.litertlm` from revision `3d48132a`, because the copy on `main` needs 0.19.1. For an app that ships, name a revision in the model id.
+- A file on the Hub's `main` can change under the same name. A phone with an engine older than LiteRT-LM 0.19.1 reads the `-gpu.litertlm` file of the Gemma 4 E2B, E4B, 12B, 26B-A4B and 31B repos from the last revision before 2026-11-11, because the copy on `main` needs 0.19.1. The list is `REPLACED_FILES` in `src/shared/hugging-face.ts`. For an app that ships, name a revision in the model id.
 - Images and audio in the prompt aren't supported yet. A file part fails with a clear error.
 - Numbers in the README and in `docs/tested-devices.md` carry a device and a date. Don't repeat them for another device.

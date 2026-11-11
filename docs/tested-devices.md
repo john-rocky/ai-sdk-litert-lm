@@ -40,6 +40,6 @@ The check that failed on the Pixel 11 Pro was `failure: generateText aborted, th
 
 The phone's screen timeout is 30 s. In each of those three runs the screen went off less than 30 s after the app opened and stayed off (`Going to sleep due to timeout`). Half a second later the app logged `onHostPause`, and it never resumed. React Native stops its timers while the app is paused, so the abort never came. In another run with the screen off, of `prepare` and `streamText` only, the app's cpuset read while it streamed was `/background`, with CPUs 0–1, the phone's two little cores (`android-p11p-35-r7-speed.log`, with the reading in `r7-speed-state.txt`).
 
-For the rerun, a copy of the example was changed to keep the screen on while its checks ran (`expo-keep-awake`). The screen stayed on and the app stayed in front: its log has no `Going to sleep` and no `onHostPause`. The call was aborted, and `streamText` ran at 29.0 tok/s (27.2 on 2026-11-06). The example in this repo doesn't keep the screen on yet.
+For the rerun, a copy of the example was changed to keep the screen on while its checks ran (`expo-keep-awake`). The screen stayed on and the app stayed in front: its log has no `Going to sleep` and no `onHostPause`. The call was aborted, and `streamText` ran at 29.0 tok/s (27.2 on 2026-11-06). The example now keeps the screen on while its checks run.
 
 The logs are kept by the author, not in this repo. What wasn't run on a device is listed at the end of [What was checked](what-was-checked.md).

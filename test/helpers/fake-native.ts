@@ -13,6 +13,8 @@ export interface ScriptedTurn {
   failWith?: Error
   /** Leaves the message generating until it is cancelled. */
   hangAfterTokens?: boolean
+  /** Waits this long before each token, like a slow phone. */
+  delayMs?: number
 }
 
 /** A scripted stand-in for the phone's LiteRT-LM binding that records what it was asked. */
@@ -86,17 +88,25 @@ export class FakeNative {
         const turn = self.turns.shift()
         if (turn === undefined) return Promise.reject(new Error('No scripted turn left.'))
         return new Promise<string>((resolve, reject) => {
+          let cancelled = false
           self.cancel = () => {
+            cancelled = true
             self.cancel = undefined
             onToken('', true)
             reject(cancelledError())
           }
           void (async () => {
             for (const token of turn.tokens) {
-              await Promise.resolve()
+              if (turn.delayMs !== undefined) {
+                await new Promise((wake) => setTimeout(wake, turn.delayMs))
+              } else {
+                await Promise.resolve()
+              }
+              // A cancelled message streams nothing more, as with the engine.
+              if (cancelled) return
               onToken(token, false)
             }
-            if (turn.hangAfterTokens) return
+            if (turn.hangAfterTokens || cancelled) return
             self.cancel = undefined
             if (turn.failWith !== undefined) {
               onToken(`Error: ${turn.failWith.message}`, true)

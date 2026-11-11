@@ -898,6 +898,27 @@ describe('failure paths', () => {
     await expect(pending).rejects.toMatchObject({ name: 'AbortError' })
   })
 
+  it('rejects generateText with an AbortError on a slow phone, before the first token', async () => {
+    // The Pixel 11 Pro of 2026-11-11 took 4.8 s to its first token: an abort at 300 ms lands while
+    // the engine still reads the prompt.
+    const { fake, provider } = setup()
+    fake.turns.push({ tokens: ['1\n', '2\n', '3\n'], delayMs: 400 }, { tokens: ['green'] })
+    const model = provider(MODEL)
+    const controller = new AbortController()
+    const started = Date.now()
+    setTimeout(() => controller.abort(), 30)
+
+    await expect(
+      generateText({ model, prompt: 'Count.', abortSignal: controller.signal }),
+    ).rejects.toMatchObject({ name: 'AbortError' })
+    expect(Date.now() - started).toBeLessThan(300)
+    expect(fake.resets.length).toBeGreaterThanOrEqual(2)
+
+    const next = await generateText({ model, prompt: 'Say green.' })
+    expect(next.text).toBe('green')
+    expect(next.providerMetadata?.['litert-lm']).toMatchObject({ continued: false })
+  })
+
   it('does nothing for a signal already aborted', async () => {
     const { fake, provider } = setup()
     const controller = new AbortController()
@@ -1228,7 +1249,16 @@ describe('choosing a file from a repo', () => {
       expect(load?.options.sha256).toBe(newSha)
     })
 
-    it('keeps main when the caller set a hash', async () => {
+    it('keeps a revision named as `@main`, as with no revision', async () => {
+      stubFetch(200, mainTree)
+
+      const load = await loadOn('ios', `hf://${repo}@main`)
+
+      expect(load?.path).toBe(urlAt(lastRevision, gpu))
+      expect(load?.options.sha256).toBe(lastSha)
+    })
+
+    it('keeps main when the caller set the hash of the copy there', async () => {
       stubFetch(200, mainTree)
 
       const load = await loadOn('ios', `hf://${repo}`, { sha256: newSha })
@@ -1237,7 +1267,26 @@ describe('choosing a file from a repo', () => {
       expect(load?.options.sha256).toBe(newSha)
     })
 
-    it('loads the file already on the phone, with no hash, when the Hub does not answer', async () => {
+    it('reads the copy from before when the caller set its hash, on any engine', async () => {
+      const fetchStub = stubFetch(200, mainTree)
+
+      const repoLoad = await loadOn('ios', `hf://${repo}`, {
+        sha256: lastSha.toUpperCase(),
+        engineOlderThan: [],
+      })
+      const namedLoad = await loadOn('android', `hf://${repo}/${gpu}`, {
+        sha256: lastSha,
+        engineOlderThan: [],
+      })
+
+      expect(repoLoad?.path).toBe(urlAt(lastRevision, gpu))
+      expect(repoLoad?.options.sha256).toBe(lastSha.toUpperCase())
+      expect(namedLoad?.path).toBe(urlAt(lastRevision, gpu))
+      expect(namedLoad?.options.sha256).toBe(lastSha)
+      expect(fetchStub).toHaveBeenCalledTimes(1)
+    })
+
+    it('reads the file already on the phone from the last revision the engine can load, when the Hub does not answer', async () => {
       vi.stubGlobal('fetch', vi.fn(async () => {
         throw new TypeError('Network request failed')
       }))
@@ -1245,9 +1294,58 @@ describe('choosing a file from a repo', () => {
 
       const load = await loadOn('ios', `hf://${repo}`, { keptFiles: [gpu] })
 
-      expect(load?.path).toContain(gpu)
-      expect(load?.options.sha256).toBeUndefined()
+      // The hash makes the binding keep the file only when it's the copy from before.
+      expect(load?.path).toBe(urlAt(lastRevision, gpu))
+      expect(load?.options.sha256).toBe(lastSha)
+      expect(String(warn.mock.calls[0]?.[0])).toContain('from revision 3d48132a')
       warn.mockRestore()
+    })
+
+    it('does the same when the Hub answers with an error', async () => {
+      stubFetch(503, { error: 'Service Unavailable' })
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      const load = await loadOn('ios', `hf://${repo}`, { keptFiles: [gpu] })
+
+      expect(load?.path).toBe(urlAt(lastRevision, gpu))
+      expect(load?.options.sha256).toBe(lastSha)
+      warn.mockRestore()
+    })
+
+    it('loads the file already on the phone as it is, once the engine can load main', async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => {
+        throw new TypeError('Network request failed')
+      }))
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      const load = await loadOn('ios', `hf://${repo}`, { keptFiles: [gpu], engineOlderThan: [] })
+
+      expect(load?.path).toBe(urlAt('main', gpu))
+      expect(load?.options.sha256).toBeUndefined()
+      expect(String(warn.mock.calls[0]?.[0])).toContain('already on the phone')
+      warn.mockRestore()
+    })
+
+    it('reads the -gpu file of the four repos replaced the same day from before that day', async () => {
+      const replaced = [
+        ['gemma-4-E4B-it', '8b77b27bfeb8d39447ac174c07d5bcde70e45d81', '4912bb5a9c30993c51a7711f763212077458529312175df0573a78323a2bb7ff'],
+        ['gemma-4-12B-it', '12c90aac44ff1b598f0404de0a9ce92dd97b5554', 'fba0ea417fda0eecdcc1e62e0ea7777acf44f171cefb3bc05a642746f39faf39'],
+        ['gemma-4-26B-A4B-it', 'ff6e090e90468f72b7552f4d1de9cb1dabcd7f0d', '94bbde2453dd9b67c61c16017af331e5841cbbd9edf83bd2f84bc73e2a7cbdb1'],
+        ['gemma-4-31B-it', 'ad2ed603ed72774ce7234cef3a9dadb6455e26e7', '6cd4031c2f3a6c8dc7f96eaf4ded58132de82e38b49862e5c2ed1ef8cc450e35'],
+      ]
+      for (const [name, revision, sha256] of replaced) {
+        const other = `litert-community/${name}-litert-lm`
+        const file = `${name}-gpu.litertlm`
+        stubFetch(200, [
+          { type: 'file', path: file, lfs: { oid: 'e'.repeat(64) } },
+          { type: 'file', path: `${name}.litertlm`, lfs: { oid: 'f'.repeat(64) } },
+        ])
+
+        const load = await loadOn('ios', `hf://${other}`)
+
+        expect(load?.path).toBe(`https://huggingface.co/${other}/resolve/${revision}/${file}`)
+        expect(load?.options.sha256).toBe(sha256)
+      }
     })
   })
 

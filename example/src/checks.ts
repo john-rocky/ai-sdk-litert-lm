@@ -512,6 +512,8 @@ export async function runChecks(
     'failure: generateText aborted, then the model still works',
     async () => {
       const controller = new AbortController()
+      // On Android this timer fires only while the app is in front: React Native stops its timers
+      // when the screen goes off. App.tsx keeps the screen on while the checks run.
       setTimeout(() => controller.abort(), 300)
       let name = 'none'
       try {

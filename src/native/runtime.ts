@@ -187,6 +187,10 @@ export function createNativeRuntime(
       ? { Authorization: `Bearer ${settings.accessToken}` }
       : undefined
 
+  /** Where to read a file this engine can't load from `main`, or the copy from before a set hash names. */
+  const olderEngineFile = (ref: HuggingFaceRef, path: string) =>
+    lastLoadableRevision(ref, path, binding.engineIsOlderThan, settings.sha256)
+
   /** The Hub didn't answer, as with no network: a file from this repo that's here still loads. */
   const pickKeptFile = (ref: HuggingFaceRef): boolean => {
     const file = selectKeptFile(
@@ -196,9 +200,16 @@ export function createNativeRuntime(
       binding.getDeviceInfo().platform,
     )
     if (file === undefined) return false
-    console.warn(`Could not ask the Hub about ${ref.repo}, so this loads ${file.path}, already on the phone.`)
-    modelPath = resolveUrl(ref, file.path)
-    downloadOptions = { headers, sha256: settings.sha256 }
+    // The file here may be the copy `main` has now, which this engine can't load. Its hash tells
+    // the binding to keep it only when it's the copy from before, and to download that otherwise.
+    const older = olderEngineFile(ref, file.path)
+    console.warn(
+      older === undefined
+        ? `Could not ask the Hub about ${ref.repo}, so this loads ${file.path}, already on the phone.`
+        : `Could not ask the Hub about ${ref.repo}, so this loads ${file.path} from revision ${older.revision.slice(0, 8)}, the last one this engine can load.`,
+    )
+    modelPath = resolveUrl(older !== undefined ? { ...ref, revision: older.revision } : ref, file.path)
+    downloadOptions = { headers, sha256: settings.sha256 ?? older?.sha256 }
     return true
   }
 
@@ -224,12 +235,6 @@ export function createNativeRuntime(
       return undefined
     }
   }
-
-  /** Where to read a file this engine can't load from `main`. A set hash names the bytes, so it stays. */
-  const olderEngineFile = (ref: HuggingFaceRef, path: string) =>
-    settings.sha256 === undefined
-      ? lastLoadableRevision(ref, path, binding.engineIsOlderThan)
-      : undefined
 
   /** The file to load: a local path, a URL, or the file chosen from a Hugging Face repo. */
   const resolveSource = async (signal?: AbortSignal): Promise<void> => {

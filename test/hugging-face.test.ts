@@ -171,6 +171,29 @@ describe('lastLoadableRevision', () => {
     expect(lastLoadableRevision({ repo: 'org/repo', revision: 'main' }, gpu, older)).toBeUndefined()
     expect(lastLoadableRevision({ repo, revision: 'abc' }, gpu, older)).toBeUndefined()
   })
+
+  it('reads the copy from before when a set hash names it, on any engine', () => {
+    const lastSha = 'a53a59001894c58e6bdb5b9b227709f91a2e3e556baa7d85acf9c55402ba5cf5'
+    expect(lastLoadableRevision(onMain, gpu, () => false, lastSha.toUpperCase())).toMatchObject({
+      revision: '3d48132a00cf76de57d926de30f5c5c5ed9b8c0d',
+    })
+    expect(lastLoadableRevision(onMain, gpu, older, 'd'.repeat(64))).toBeUndefined()
+    expect(lastLoadableRevision({ repo, revision: 'abc' }, gpu, older, lastSha)).toBeUndefined()
+  })
+
+  it('knows the four repos whose -gpu file was replaced the same day', () => {
+    const replaced = [
+      ['gemma-4-E4B-it', '8b77b27bfeb8d39447ac174c07d5bcde70e45d81', '4912bb5a9c30993c51a7711f763212077458529312175df0573a78323a2bb7ff'],
+      ['gemma-4-12B-it', '12c90aac44ff1b598f0404de0a9ce92dd97b5554', 'fba0ea417fda0eecdcc1e62e0ea7777acf44f171cefb3bc05a642746f39faf39'],
+      ['gemma-4-26B-A4B-it', 'ff6e090e90468f72b7552f4d1de9cb1dabcd7f0d', '94bbde2453dd9b67c61c16017af331e5841cbbd9edf83bd2f84bc73e2a7cbdb1'],
+      ['gemma-4-31B-it', 'ad2ed603ed72774ce7234cef3a9dadb6455e26e7', '6cd4031c2f3a6c8dc7f96eaf4ded58132de82e38b49862e5c2ed1ef8cc450e35'],
+    ]
+    for (const [name, revision, sha256] of replaced) {
+      const ref = { repo: `litert-community/${name}-litert-lm`, revision: 'main' }
+      expect(lastLoadableRevision(ref, `${name}-gpu.litertlm`, older)).toMatchObject({ revision, sha256 })
+      expect(lastLoadableRevision(ref, `${name}.litertlm`, older)).toBeUndefined()
+    }
+  })
 })
 
 describe('Hub helpers', () => {

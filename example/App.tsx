@@ -1,5 +1,6 @@
 import { type ModelMessage, streamText } from 'ai'
 import { litertlm } from 'ai-sdk-litert-lm'
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
 import { StatusBar } from 'expo-status-bar'
 import { type ComponentRef, useEffect, useRef, useState } from 'react'
 import {
@@ -40,8 +41,12 @@ export default function App() {
     if (checksRunning.current) return
     checksRunning.current = true
     setCheckLog([])
+    // The checks take minutes. With the screen off, Android runs the app on its little cores and
+    // React Native stops its timers, so the screen stays on until they end.
+    activateKeepAwakeAsync('checks').catch(() => {})
     void runChecks(options, (line) => setCheckLog((log) => [...log, line])).finally(() => {
       checksRunning.current = false
+      deactivateKeepAwake('checks').catch(() => {})
     })
   }
 

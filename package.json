@@ -1,6 +1,6 @@
 {
   "name": "ai-sdk-litert-lm",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "LiteRT-LM provider for the Vercel AI SDK: run .litertlm models on iOS, Android and in the browser with generateText and streamText.",
   "keywords": [
     "ai",

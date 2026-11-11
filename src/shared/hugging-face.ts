@@ -133,32 +133,65 @@ export function selectKeptFile(
  * repo's list says so, and a phone only finds out after the download, when the engine refuses it.
  */
 const REPLACED_FILES = [
+  // On 2026-11-11 each of these became a file that needs LiteRT-LM 0.19.1. `revision` is the last
+  // commit before that day, and `sha256` the file it holds.
   {
-    // On 2026-11-11 `main` took the copy from the `web` branch.
     repo: 'litert-community/gemma-4-E2B-it-litert-lm',
     path: 'gemma-4-E2B-it-gpu.litertlm',
     needsEngine: '0.19.1',
     revision: '3d48132a00cf76de57d926de30f5c5c5ed9b8c0d',
     sha256: 'a53a59001894c58e6bdb5b9b227709f91a2e3e556baa7d85acf9c55402ba5cf5',
   },
+  {
+    repo: 'litert-community/gemma-4-E4B-it-litert-lm',
+    path: 'gemma-4-E4B-it-gpu.litertlm',
+    needsEngine: '0.19.1',
+    revision: '8b77b27bfeb8d39447ac174c07d5bcde70e45d81',
+    sha256: '4912bb5a9c30993c51a7711f763212077458529312175df0573a78323a2bb7ff',
+  },
+  {
+    repo: 'litert-community/gemma-4-12B-it-litert-lm',
+    path: 'gemma-4-12B-it-gpu.litertlm',
+    needsEngine: '0.19.1',
+    revision: '12c90aac44ff1b598f0404de0a9ce92dd97b5554',
+    sha256: 'fba0ea417fda0eecdcc1e62e0ea7777acf44f171cefb3bc05a642746f39faf39',
+  },
+  {
+    repo: 'litert-community/gemma-4-26B-A4B-it-litert-lm',
+    path: 'gemma-4-26B-A4B-it-gpu.litertlm',
+    needsEngine: '0.19.1',
+    revision: 'ff6e090e90468f72b7552f4d1de9cb1dabcd7f0d',
+    sha256: '94bbde2453dd9b67c61c16017af331e5841cbbd9edf83bd2f84bc73e2a7cbdb1',
+  },
+  {
+    repo: 'litert-community/gemma-4-31B-it-litert-lm',
+    path: 'gemma-4-31B-it-gpu.litertlm',
+    needsEngine: '0.19.1',
+    revision: 'ad2ed603ed72774ce7234cef3a9dadb6455e26e7',
+    sha256: '6cd4031c2f3a6c8dc7f96eaf4ded58132de82e38b49862e5c2ed1ef8cc450e35',
+  },
 ]
 
 /**
  * The last revision of a file that this engine can load, when the copy on `main` needs a newer
- * one. Undefined when `main` can be read, or when the model id names another revision.
+ * one. Undefined when `main` can be read, or when the model id names a revision other than `main`
+ * (`@main` written out is the same as no revision). A set `sha256` names the bytes: it reads the
+ * copy from before when it names that copy, on any engine, and `main` when it names another.
  */
 export function lastLoadableRevision(
   ref: HuggingFaceRef,
   path: string,
   engineIsOlderThan: (version: string) => boolean,
+  sha256?: string,
 ): { revision: string; sha256: string } | undefined {
   if (ref.revision !== 'main') return undefined
-  return REPLACED_FILES.find(
-    (file) =>
-      file.repo.toLowerCase() === ref.repo.toLowerCase() &&
-      file.path === path &&
-      engineIsOlderThan(file.needsEngine),
+  const file = REPLACED_FILES.find(
+    (replaced) =>
+      replaced.repo.toLowerCase() === ref.repo.toLowerCase() && replaced.path === path,
   )
+  if (file === undefined) return undefined
+  if (sha256 !== undefined) return sha256.toLowerCase() === file.sha256 ? file : undefined
+  return engineIsOlderThan(file.needsEngine) ? file : undefined
 }
 
 export function resolveUrl(ref: HuggingFaceRef, path: string): string {
