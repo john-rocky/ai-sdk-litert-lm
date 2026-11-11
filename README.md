@@ -21,7 +21,7 @@ const result = streamText({
 for await (const text of result.textStream) console.log(text)
 ```
 
-The first call downloads the model from Hugging Face, 2 to 3 GB, and keeps it for later calls. On an iPhone, `react-native-litert-lm` asks for an entitlement for a model this size, and that needs a paid Apple Developer account ([Install](#install)). [Tools and structured output](docs/usage.md) work too. A reasoning model's thoughts reach your code only in the browser.
+The first call downloads the model from Hugging Face, 2 to 3 GB, and keeps it for later calls. On an iPhone, `react-native-litert-lm` asks for an entitlement for a model this size, and that needs a paid Apple Developer account ([Install](#install)). [Tools and structured output](docs/usage.md) work too. In the browser, a reasoning model's thoughts reach your code. On a phone, only thoughts the model writes at the start of its text, in `<think>` or `<thinking>` tags, do.
 
 On a phone the provider runs on [`react-native-litert-lm`](https://github.com/hung-yueh/react-native-litert-lm). In a browser it runs on Google's [`@litert-lm/core`](https://www.npmjs.com/package/@litert-lm/core) with WebGPU. Your bundler picks the right one, so one Expo app can target iPhone, Android and the web with the same AI code.
 

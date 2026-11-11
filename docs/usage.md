@@ -59,7 +59,7 @@ In a browser a model's thoughts arrive as `reasoning` parts, and `reasoning: 'no
 
 A phone's runtime doesn't hand thoughts to JavaScript, so the provider turns thinking off unless a call sets `reasoning`. Otherwise a model that thinks by default would spend `maxOutputTokens` on text nobody can read. With `reasoning: 'high'` on a phone, the model thinks, `reasoningText` stays empty, and the thoughts count against `maxOutputTokens`, so leave room: on a Pixel 11 Pro, Qwen3-0.6B returned empty text for 17 × 23 with 512 tokens. A call that ends with no text this way reports `finishReason: 'length'`.
 
-`<think>` tags that a bundle leaves at the start of its text become `reasoning` parts on both. After the answer has begun, a tag is text.
+`<think>` or `<thinking>` tags that a bundle leaves at the start of its text become `reasoning` parts on both. After the answer has begun, a tag is text.
 
 ## Long conversations
 

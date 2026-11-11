@@ -17,7 +17,7 @@ Some repos hold a GPU-only `-gpu.litertlm` file next to a full bundle. Given a r
 
 For a `litert-community` repo, `@litert-lm/core` looks on the repo's `web` branch before `main`, so a browser can get a different file of the same name than a phone does. A phone reads `main` unless the model id names a revision, with the one exception below.
 
-A file on `main` can change under the same name. On 2026-11-11 `gemma-4-E2B-it-gpu.litertlm` became a file that needs LiteRT-LM 0.19.1. A phone with an older engine reads that one file from revision `3d48132a`, the last one it can load, unless the model id names a revision or `sha256` is set. For an app you ship, name the revision yourself: `hf://org/repo@<commit>/file.litertlm`.
+A file on `main` can change under the same name. On 2026-11-11 `gemma-4-E2B-it-gpu.litertlm` became a file that needs LiteRT-LM 0.19.1. A phone with an older engine reads that one file from revision `3d48132a`, the last one it can load, unless `sha256` is set or the model id names a revision other than `main` (on a phone, `@main` is the same as no revision). For an app you ship, name the revision yourself: `hf://org/repo@<commit>/file.litertlm`.
 
 A phone uses the repo's `litertlm_manifest.json` instead if it has one. Files built for one chip are never chosen, and `backend: 'cpu'` skips the GPU-only file, which can't run on a CPU. When several files are left, the order is: the file named after the repo, then `model`, then INT4, then the shortest name. To load another one, name it in the model id.
 
