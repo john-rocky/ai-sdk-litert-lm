@@ -25,7 +25,7 @@ Chrome ran headless, from Playwright, with a profile on disk, `--enable-unsafe-w
 
 ## After `main` changed on 2026-11-11
 
-On 2026-11-11 `gemma-4-E2B-it-gpu.litertlm` on the Hub's `main` became a file that needs LiteRT-LM 0.19.1. These runs were made the same day, against that `main`, with `react-native-litert-lm` 0.8.2 (LiteRT-LM 0.18.1):
+On 2026-11-11 `gemma-4-E2B-it-gpu.litertlm` on the Hub's `main` became a file that needs LiteRT-LM 0.19.1, and so did the `-gpu.litertlm` file of the Gemma 4 E4B, 12B, 26B-A4B and 31B repos. The runs below came after that: 0.1.0 and 0.1.1 on 2026-11-11, 0.1.2 on 2026-11-12, all with `react-native-litert-lm` 0.8.2 (LiteRT-LM 0.18.1):
 
 | Package | Device | Install | Passed | Log |
 | --- | --- | --- | --- | --- |
@@ -35,6 +35,9 @@ On 2026-11-11 `gemma-4-E2B-it-gpu.litertlm` on the Hub's `main` became a file th
 | 0.1.1 | iPhone 18 Pro, iOS 27.2 | Over 0.1.0's download of the new file | 29 of 30. The one failure came from the example's own test helper, fixed before the clean run | `ios-i18p-18-r6-fix-new.log` |
 | 0.1.1 | Pixel 11 Pro, Android 17 | Clean | 29 of 30, with `gemma-4-E2B-it.litertlm` from `main` as before. The screen went off early in the run, and the one failure came from that | `android-p11p-32-r6-fix.log` |
 | 0.1.1 from npm | Pixel 11 Pro, Android 17 | Clean, with the screen kept on | 3 checks, all passed: `prepare`, `streamText` at 29.0 tok/s, and the one that had failed. The other 27 weren't run | `android-p11p-36-r7-awake.log` |
+| 0.1.2 | iPhone 18 Pro, iOS 27.2 | Clean | 34 of 34: the 30, with the file from revision `3d48132a`, and four checks added to a copy of the example. Twice, a model id that named the copy on `main`, with its `sha256`, downloaded that copy, which was refused with `RUNTIME_TOO_OLD` and stayed on the phone. Each time, the plain model id then downloaded the copy from before again, from `3d48132a`, and answered: the first time with that copy's `sha256` set, the second with the app's own requests to the Hub made to fail | `ios-i18p-20-r7-e2b.log` |
+| 0.1.2 | iPhone 18 Pro, iOS 27.2 | Clean | 28 of 28, with `hf://litert-community/gemma-4-E4B-it-litert-lm` and its file from revision `8b77b27b`. The two checks that put the E2B file's name in the model id don't run with another model | `ios-i18p-21-r7-e4b.log` |
+| 0.1.2 | Pixel 11 Pro, Android 17 | Clean. The screen stayed on through the run | 30 of 30, with `gemma-4-E2B-it.litertlm` from `main` | `android-p11p-37-r7-full.log` |
 
 The check that failed on the Pixel 11 Pro was `failure: generateText aborted, then the model still works`. The check sets a timer to abort the call after 300 ms, and the call ran to the end. It failed the same way in the three runs with the screen off, and passed in the rerun that kept the screen on.
 
