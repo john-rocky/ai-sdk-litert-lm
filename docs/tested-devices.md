@@ -33,8 +33,13 @@ On 2026-11-11 `gemma-4-E2B-it-gpu.litertlm` on the Hub's `main` became a file th
 | 0.1.0 from npm | iPhone 18 Pro, iOS 27.2 | Over an app that held the earlier file | 6 of 30. It downloaded the new file too, then failed the same way | `ios-i18p-17-r6-reg-old.log` |
 | 0.1.1 | iPhone 18 Pro, iOS 27.2 | Clean | 30 of 30, with the file from revision `3d48132a` | `ios-i18p-19-r6-fix-clean2.log` |
 | 0.1.1 | iPhone 18 Pro, iOS 27.2 | Over 0.1.0's download of the new file | 29 of 30. The one failure came from the example's own test helper, fixed before the clean run | `ios-i18p-18-r6-fix-new.log` |
-| 0.1.1 | Pixel 11 Pro, Android 17 | Clean | 29 of 30, with `gemma-4-E2B-it.litertlm` from `main` as before | `android-p11p-32-r6-fix.log` |
+| 0.1.1 | Pixel 11 Pro, Android 17 | Clean | 29 of 30, with `gemma-4-E2B-it.litertlm` from `main` as before. The screen went off early in the run, and the one failure came from that | `android-p11p-32-r6-fix.log` |
+| 0.1.1 from npm | Pixel 11 Pro, Android 17 | Clean, with the screen kept on | 3 checks, all passed: `prepare`, `streamText` at 29.0 tok/s, and the one that had failed. The other 27 weren't run | `android-p11p-36-r7-awake.log` |
 
-The check that failed on the Pixel 11 Pro was `failure: generateText aborted, then the model still works`. The call, aborted after 300 ms, ran to the end. It failed in both runs that day, while the phone streamed at 3.8 tok/s against 27.2 tok/s on 2026-11-06. It passed on the iPhone 18 Pro the same day and on the Pixel 11 Pro on 2026-11-06. 0.1.1 doesn't change that code.
+The check that failed on the Pixel 11 Pro was `failure: generateText aborted, then the model still works`. The check sets a timer to abort the call after 300 ms, and the call ran to the end. It failed the same way in the three runs with the screen off, and passed in the rerun that kept the screen on.
+
+The phone's screen timeout is 30 s. In each of those three runs the screen went off less than 30 s after the app opened and stayed off (`Going to sleep due to timeout`). Half a second later the app logged `onHostPause`, and it never resumed. React Native stops its timers while the app is paused, so the abort never came. In another run with the screen off, of `prepare` and `streamText` only, the app's cpuset read while it streamed was `/background`, with CPUs 0–1, the phone's two little cores (`android-p11p-35-r7-speed.log`, with the reading in `r7-speed-state.txt`).
+
+For the rerun, a copy of the example was changed to keep the screen on while its checks ran (`expo-keep-awake`). The screen stayed on and the app stayed in front: its log has no `Going to sleep` and no `onHostPause`. The call was aborted, and `streamText` ran at 29.0 tok/s (27.2 on 2026-11-06). The example in this repo doesn't keep the screen on yet.
 
 The logs are kept by the author, not in this repo. What wasn't run on a device is listed at the end of [What was checked](what-was-checked.md).
