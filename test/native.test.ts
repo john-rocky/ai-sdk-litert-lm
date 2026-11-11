@@ -1151,6 +1151,106 @@ describe('choosing a file from a repo', () => {
     expect(fetchStub).not.toHaveBeenCalled()
   })
 
+  describe('a file on main that needs a newer engine than the phone has', () => {
+    const repo = 'litert-community/gemma-4-E2B-it-litert-lm'
+    const gpu = 'gemma-4-E2B-it-gpu.litertlm'
+    const full = 'gemma-4-E2B-it.litertlm'
+    const lastRevision = '3d48132a00cf76de57d926de30f5c5c5ed9b8c0d'
+    const lastSha = 'a53a59001894c58e6bdb5b9b227709f91a2e3e556baa7d85acf9c55402ba5cf5'
+    const newSha = 'd3cfec6ae2e027a994e51366d44dbf522ec7531a4a35fbbfcd3e9cc9b927afc1'
+    const fullSha = '181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c'
+    const mainTree = [
+      { type: 'file', path: gpu, lfs: { oid: newSha } },
+      { type: 'file', path: full, lfs: { oid: fullSha } },
+    ]
+    const urlAt = (revision: string, path: string) =>
+      `https://huggingface.co/${repo}/resolve/${revision}/${path}`
+
+    const loadOn = async (
+      platform: 'android' | 'ios',
+      id: string,
+      options: { sha256?: string; engineOlderThan?: string[]; keptFiles?: string[] } = {},
+    ) => {
+      const { fake, provider } = setup()
+      fake.platform = platform
+      if (options.engineOlderThan !== undefined) fake.engineOlderThan = options.engineOlderThan
+      if (options.keptFiles !== undefined) fake.keptFiles = options.keptFiles
+      fake.turns.push({ tokens: ['ok'] })
+      const settings = options.sha256 !== undefined ? { sha256: options.sha256 } : {}
+      await generateText({ model: provider(id, settings), prompt: 'Hi' })
+      return fake.loads[0]
+    }
+
+    it('reads the last file the engine can load on iOS', async () => {
+      stubFetch(200, mainTree)
+
+      const load = await loadOn('ios', `hf://${repo}`)
+
+      expect(load?.path).toBe(urlAt(lastRevision, gpu))
+      expect(load?.options.sha256).toBe(lastSha)
+    })
+
+    it('leaves Android on main, with the full bundle', async () => {
+      stubFetch(200, mainTree)
+
+      const load = await loadOn('android', `hf://${repo}`)
+
+      expect(load?.path).toBe(urlAt('main', full))
+      expect(load?.options.sha256).toBe(fullSha)
+    })
+
+    it('does the same for the file named in the model id, without asking the Hub', async () => {
+      const fetchStub = stubFetch(200, mainTree)
+
+      const load = await loadOn('android', `hf://${repo}/${gpu}`)
+
+      expect(load?.path).toBe(urlAt(lastRevision, gpu))
+      expect(load?.options.sha256).toBe(lastSha)
+      expect(fetchStub).not.toHaveBeenCalled()
+    })
+
+    it('reads main once the engine can load it', async () => {
+      stubFetch(200, mainTree)
+
+      const load = await loadOn('ios', `hf://${repo}`, { engineOlderThan: [] })
+
+      expect(load?.path).toBe(urlAt('main', gpu))
+      expect(load?.options.sha256).toBe(newSha)
+    })
+
+    it('keeps a revision the model id names', async () => {
+      const named = 'cccc664ea93091c52eeb7867ad4e5466357e14f3'
+      stubFetch(200, mainTree)
+
+      const load = await loadOn('ios', `hf://${repo}@${named}/${gpu}`)
+
+      expect(load?.path).toBe(urlAt(named, gpu))
+      expect(load?.options.sha256).toBe(newSha)
+    })
+
+    it('keeps main when the caller set a hash', async () => {
+      stubFetch(200, mainTree)
+
+      const load = await loadOn('ios', `hf://${repo}`, { sha256: newSha })
+
+      expect(load?.path).toBe(urlAt('main', gpu))
+      expect(load?.options.sha256).toBe(newSha)
+    })
+
+    it('loads the file already on the phone, with no hash, when the Hub does not answer', async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => {
+        throw new TypeError('Network request failed')
+      }))
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      const load = await loadOn('ios', `hf://${repo}`, { keptFiles: [gpu] })
+
+      expect(load?.path).toContain(gpu)
+      expect(load?.options.sha256).toBeUndefined()
+      warn.mockRestore()
+    })
+  })
+
   it('uses a manifest when the repo has one', async () => {
     const { fake, provider } = setup()
     fake.manifest = {

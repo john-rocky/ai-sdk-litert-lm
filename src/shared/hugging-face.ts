@@ -128,6 +128,39 @@ export function selectKeptFile(
   return selectRepoFile(fromRepo, repo, backend, platform)
 }
 
+/**
+ * Files replaced on `main` by a file for a newer engine, under the same name. Nothing in the
+ * repo's list says so, and a phone only finds out after the download, when the engine refuses it.
+ */
+const REPLACED_FILES = [
+  {
+    // On 2026-11-11 `main` took the copy from the `web` branch.
+    repo: 'litert-community/gemma-4-E2B-it-litert-lm',
+    path: 'gemma-4-E2B-it-gpu.litertlm',
+    needsEngine: '0.19.1',
+    revision: '3d48132a00cf76de57d926de30f5c5c5ed9b8c0d',
+    sha256: 'a53a59001894c58e6bdb5b9b227709f91a2e3e556baa7d85acf9c55402ba5cf5',
+  },
+]
+
+/**
+ * The last revision of a file that this engine can load, when the copy on `main` needs a newer
+ * one. Undefined when `main` can be read, or when the model id names another revision.
+ */
+export function lastLoadableRevision(
+  ref: HuggingFaceRef,
+  path: string,
+  engineIsOlderThan: (version: string) => boolean,
+): { revision: string; sha256: string } | undefined {
+  if (ref.revision !== 'main') return undefined
+  return REPLACED_FILES.find(
+    (file) =>
+      file.repo.toLowerCase() === ref.repo.toLowerCase() &&
+      file.path === path &&
+      engineIsOlderThan(file.needsEngine),
+  )
+}
+
 export function resolveUrl(ref: HuggingFaceRef, path: string): string {
   const encodedPath = path.split('/').map(encodeURIComponent).join('/')
   return `https://huggingface.co/${ref.repo}/resolve/${encodeURIComponent(ref.revision)}/${encodedPath}`

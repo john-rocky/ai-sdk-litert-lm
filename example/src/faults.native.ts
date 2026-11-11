@@ -1,8 +1,10 @@
 import { createNativeRuntime } from 'ai-sdk-litert-lm/internal/native'
 import { createProviderWith } from 'ai-sdk-litert-lm/internal/provider'
 import {
+  compareVersions,
   createLLM,
   getDeviceInfo,
+  LITERT_LM_VERSION,
   ModelRegistry,
   resolveFromManifest,
   toolResultPart,
@@ -13,6 +15,7 @@ const BROKEN_CALL = '<tool_call>{"name":"get_weather","arguments":{"city":</tool
 export function createProviderWithBrokenToolCall() {
   return createProviderWith((modelId, settings) =>
     createNativeRuntime(modelId, settings, {
+      engineIsOlderThan: (version) => compareVersions(LITERT_LM_VERSION, version) < 0,
       getDeviceInfo,
       listKeptFiles: () => ModelRegistry.listCachedFiles().map((file) => file.fileName),
       resolveFromManifest,

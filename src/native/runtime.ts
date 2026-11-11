@@ -19,6 +19,7 @@ import type {
 import { createAbortError, errorMessage, LiteRTLMError, type LiteRTLMErrorCode } from '../shared/errors.js'
 import {
   type HuggingFaceRef,
+  lastLoadableRevision,
   parseHuggingFaceId,
   parseTree,
   type RepoFile,
@@ -42,6 +43,8 @@ type ExecuteOptions = NonNullable<Parameters<LiteRTLMInstance['execute']>[2]>
 /** The parts of `react-native-litert-lm` the runtime uses. Replaced in tests. */
 export interface NativeBinding {
   createLLM(): LiteRTLMInstance
+  /** Whether the engine in this app is older than a LiteRT-LM version. */
+  engineIsOlderThan(version: string): boolean
   getDeviceInfo: typeof getDeviceInfo
   /** The names of the files already downloaded. */
   listKeptFiles(): string[]
@@ -222,6 +225,12 @@ export function createNativeRuntime(
     }
   }
 
+  /** Where to read a file this engine can't load from `main`. A set hash names the bytes, so it stays. */
+  const olderEngineFile = (ref: HuggingFaceRef, path: string) =>
+    settings.sha256 === undefined
+      ? lastLoadableRevision(ref, path, binding.engineIsOlderThan)
+      : undefined
+
   /** The file to load: a local path, a URL, or the file chosen from a Hugging Face repo. */
   const resolveSource = async (signal?: AbortSignal): Promise<void> => {
     if (modelPath !== undefined) return
@@ -232,8 +241,9 @@ export function createNativeRuntime(
       return
     }
     if (ref.path !== undefined) {
-      const sha256 = settings.sha256 ?? (await hashFromHub(ref, ref.path, signal))
-      modelPath = resolveUrl(ref, ref.path)
+      const older = olderEngineFile(ref, ref.path)
+      const sha256 = settings.sha256 ?? older?.sha256 ?? (await hashFromHub(ref, ref.path, signal))
+      modelPath = resolveUrl(older !== undefined ? { ...ref, revision: older.revision } : ref, ref.path)
       downloadOptions = { headers, sha256 }
       return
     }
@@ -304,8 +314,9 @@ export function createNativeRuntime(
           : `${ref.repo} has no .litertlm file for this backend. Name one in the model id: hf://${ref.repo}/${names[0]}`,
       )
     }
-    modelPath = resolveUrl(ref, file.path)
-    downloadOptions = { headers, sha256: settings.sha256 ?? file.sha256 }
+    const older = olderEngineFile(ref, file.path)
+    modelPath = resolveUrl(older !== undefined ? { ...ref, revision: older.revision } : ref, file.path)
+    downloadOptions = { headers, sha256: settings.sha256 ?? older?.sha256 ?? file.sha256 }
   }
 
   const buildConfig = (request: GenerationRequest): LLMConfig => {

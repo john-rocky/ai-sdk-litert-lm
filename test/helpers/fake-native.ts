@@ -29,6 +29,8 @@ export class FakeNative {
   platform: 'android' | 'ios' = 'android'
   manifestCalls: any[] = []
   keptFiles: string[] = []
+  /** The LiteRT-LM versions the engine is older than. */
+  engineOlderThan: string[] = ['0.19.1']
   /** False once the system has taken the engine's memory back. */
   ready = true
   /** Holds a load until it is called, like a long download. */
@@ -47,6 +49,7 @@ export class FakeNative {
       this.instancesCreated += 1
       return this.instance()
     },
+    engineIsOlderThan: (version) => this.engineOlderThan.includes(version),
     getDeviceInfo: (() => ({ platform: this.platform })) as NativeBinding['getDeviceInfo'],
     listKeptFiles: () => this.keptFiles,
     resolveFromManifest: (async (repo: string, options: unknown) => {

@@ -1,6 +1,8 @@
 import {
+  compareVersions,
   createLLM,
   getDeviceInfo,
+  LITERT_LM_VERSION,
   ModelRegistry,
   resolveFromManifest,
   toolResultPart,
@@ -24,6 +26,7 @@ export type {
 
 const binding: NativeBinding = {
   createLLM: createLLM as NativeBinding['createLLM'],
+  engineIsOlderThan: (version) => compareVersions(LITERT_LM_VERSION, version) < 0,
   getDeviceInfo,
   listKeptFiles: () => ModelRegistry.listCachedFiles().map((file) => file.fileName),
   resolveFromManifest,

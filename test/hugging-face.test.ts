@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  lastLoadableRevision,
   parseHuggingFaceId,
   parseTree,
   resolveUrl,
@@ -140,6 +141,35 @@ describe('selectRepoFile', () => {
   it('finds nothing in a repo without a usable file', () => {
     expect(selectRepoFile([{ path: 'README.md' }], REPO, undefined, 'android')).toBeUndefined()
     expect(selectRepoFile([{ path: 'x_NPU_y.litertlm' }], REPO, undefined, 'android')).toBeUndefined()
+  })
+})
+
+describe('lastLoadableRevision', () => {
+  const repo = 'litert-community/gemma-4-E2B-it-litert-lm'
+  const gpu = 'gemma-4-E2B-it-gpu.litertlm'
+  const onMain = { repo, revision: 'main' }
+  const older = (version: string) => version === '0.19.1'
+
+  it('gives the last revision of a replaced file to an older engine', () => {
+    expect(lastLoadableRevision(onMain, gpu, older)).toMatchObject({
+      revision: '3d48132a00cf76de57d926de30f5c5c5ed9b8c0d',
+      sha256: 'a53a59001894c58e6bdb5b9b227709f91a2e3e556baa7d85acf9c55402ba5cf5',
+    })
+  })
+
+  it('reads the repo in any case, as the Hub does', () => {
+    const shouted = { repo: 'Litert-Community/Gemma-4-E2B-it-litert-lm', revision: 'main' }
+    expect(lastLoadableRevision(shouted, gpu, older)).toBeDefined()
+  })
+
+  it('leaves main alone for an engine that can load the file', () => {
+    expect(lastLoadableRevision(onMain, gpu, () => false)).toBeUndefined()
+  })
+
+  it('leaves another file, repo or revision alone', () => {
+    expect(lastLoadableRevision(onMain, 'gemma-4-E2B-it.litertlm', older)).toBeUndefined()
+    expect(lastLoadableRevision({ repo: 'org/repo', revision: 'main' }, gpu, older)).toBeUndefined()
+    expect(lastLoadableRevision({ repo, revision: 'abc' }, gpu, older)).toBeUndefined()
   })
 })
 
